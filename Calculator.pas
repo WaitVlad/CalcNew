@@ -126,6 +126,7 @@ var
   a: Boolean;
   MyThread: TMyThread;
   StringDataArray: array [0..4] of string;
+  WaitForVar: boolean;
 
 procedure TForm1.Restart;
 begin
@@ -349,6 +350,7 @@ begin
   a := True;
   MyThread := TMyThread.Create(false);
   MyThread.Priority:=tpNormal;
+  WaitForVar := False;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -407,8 +409,11 @@ begin
   if ResultCount = 5 then
   begin
     TData.DataWrite;
-    Resultcount := 0;
-    DataArrayClean;
+    if WaitForVar = True then
+    begin
+      DataArrayClean;
+      Resultcount := 0;
+    end;
   end;
 end;
 
@@ -428,14 +433,19 @@ begin
   begin
     StringDataArray[Index] := '"' + FreshDataArray[Index].ExactTime + ':' + FreshDataArray[Index].Operant1 + FreshDataArray[Index].TOperator + FreshDataArray[Index].Operand2 + ' ' + FreshDataArray[Index].Result + '"';
  end;
+ Sleep(100);
 end;
 
 procedure TMyThread.execute;
 var I: Integer;
 begin
-  inherited;
+inherited;
   while assigned(MyThread) do
-  if ResultCount = 5 then
+  begin
+  WaitForVar := False;
+    if ResultCount = 5 then
+    begin
+    WaitForVar := True;
     for I := 0 to 4 do
         if FileExists('Log.txt') then
       begin
@@ -451,6 +461,10 @@ begin
         WriteLn(f, StringDataArray[I]);
         Close(f);
       end;
+    end;
+    Sleep(100);
+  WaitForVar := False;
+  end;
 end;
 
 end.
